@@ -1,0 +1,54 @@
+﻿@model List<BlogApp.Models.ViewModels.BlogViewModel>
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to BlogBD</h1>
+    <p>A platform for sharing your thoughts</p>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h2>Latest Blog Posts</h2>
+        <hr />
+    </div>
+</div>
+
+<div id="blogList">
+    @await Html.PartialAsync("_BlogPartial", Model)
+</div>
+
+@if (ViewBag.HasMorePages)
+{
+    <div class="row mt-4">
+        <div class="col-md-12 text-center">
+            <button id="loadMoreBtn" class="btn btn-primary" data-page="@(ViewBag.CurrentPage + 1)">Load More</button>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#loadMoreBtn').click(function() {
+                var page = $(this).data('page');
+                $.ajax({
+                    url: '@Url.Action("Index", "Home")',
+                    data: { page: page },
+                    type: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function(result) {
+                        $('#blogList').append(result);
+                        var btn = $('#loadMoreBtn');
+                        btn.data('page', page + 1);
+
+                        if ($(result).find('.blog-post').length < 5) {
+                            btn.hide();
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

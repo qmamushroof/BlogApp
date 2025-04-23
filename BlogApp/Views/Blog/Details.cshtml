@@ -1,0 +1,131 @@
+﻿@model BlogApp.Models.ViewModels.BlogViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    var comments = ViewBag.Comments as List<BlogApp.Models.ViewModels.CommentViewModel>;
+    var isAuthenticated = ViewBag.IsAuthenticated;
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <h1>@Model.Title</h1>
+        <p class="text-muted">
+            Posted by @Model.AuthorName on @Model.CreatedAt.ToString("MMM dd, yyyy")
+            @if (Model.CreatedAt != Model.UpdatedAt && Model.UpdatedAt != null)
+            {
+                @* <span>(Updated on @Model.UpdatedAt.ToString("MMM dd, yyyy"))</span> *@
+            }
+        </p>
+
+        <div class="blog-content mb-4">
+            @Html.Raw(Model.Content)
+        </div>
+
+        @if (Model.UserCanEdit)
+        {
+            <div class="mb-4">
+                @* <a asp-controller="Blog" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Edit</a> *@
+            </div>
+        }
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <span>Reactions</span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex">
+                    @if (isAuthenticated)
+                    {
+                        <button class="btn btn-outline-primary me-2 reaction-btn @(Model.UserHasReacted && Model.UserReactionIsLike == true ? "active" : "")"
+                                data-blog-id="@Model.Id" data-is-like="true">
+                            Like <span class="badge bg-secondary" id="likes-count">@Model.LikesCount</span>
+                        </button>
+                        <button class="btn btn-outline-danger reaction-btn @(Model.UserHasReacted && Model.UserReactionIsLike == false ? "active" : "")"
+                                data-blog-id="@Model.Id" data-is-like="false">
+                            Dislike <span class="badge bg-secondary" id="dislikes-count">@Model.DislikesCount</span>
+                        </button>
+                    }
+                    else
+                    {
+                        <div>
+                            <span class="me-3">Likes: <span class="badge bg-primary">@Model.LikesCount</span></span>
+                            <span>Dislikes: <span class="badge bg-danger">@Model.DislikesCount</span></span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5>Comments (@comments.Count)</h5>
+            </div>
+            <div class="card-body">
+                @if (isAuthenticated)
+                {
+                    <div class="mb-4">
+                        <form id="commentForm" asp-controller="Comment" asp-action="Create" method="post">
+                            <input type="hidden" name="BlogId" value="@Model.Id" />
+                            <div class="mb-3">
+                                <textarea name="Content" class="form-control" rows="3" placeholder="Write your comment..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Post Comment</button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-4">
+                        Please <a asp-controller="Account" asp-action="Login">login</a> to comment on this blog post.
+                    </div>
+                }
+                 
+                <div id="commentsList">
+                    @await Html.PartialAsync("_CommentsPartial", comments)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.reaction-btn').click(function() {
+                var blogId = $(this).data('blog-id');
+                var isLike = $(this).data('is-like');
+
+                $.ajax({
+                    url: '@Url.Action("React", "Blog")',
+                    type: 'POST',
+                    data: { blogId: blogId, isLike: isLike },
+                    success: function(result) {
+                        $('#likes-count').text(result.likes);
+                        $('#dislikes-count').text(result.dislikes);
+
+                        $('.reaction-btn').removeClass('active');
+                        if (isLike) {
+                            $('[data-is-like="true"]').addClass('active');
+                        } else {
+                            $('[data-is-like="false"]').addClass('active');
+                        }
+                    }
+                });
+            });
+
+            $('#commentForm').submit(function(e) {
+                e.preventDefault();
+
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: $(this).attr('method'),
+                    data: $(this).serialize(),
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function(result) {
+                        $('#commentsList').html(result);
+                        $('#commentForm textarea').val('');
+                    }
+                });
+            });
+        });
+    </script>
+}

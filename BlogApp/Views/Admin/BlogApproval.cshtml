@@ -1,0 +1,79 @@
+﻿@model List<BlogApp.Models.Blog>
+@{
+    ViewData["Title"] = "Blog Approval";
+}
+
+<h1>Blog Posts Pending Approval</h1>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info mt-4">
+        <p>There is no pending post.</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive mt-4">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Created Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var blog in Model)
+                {
+                    <tr>
+                        <td>@blog.Title</td>
+                        <td>@blog.User.UserName</td>
+                        <td>@blog.CreatedAt.ToString("MMM dd, yyyy")</td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#previewModal_@blog.Id">
+                                Preview
+                            </a>
+                            <form asp-action="ApproveBlog" asp-route-id="@blog.Id" method="post" style="display: inline;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                            </form>
+                            <form asp-action="RejectBlog" asp-route-id="@blog.Id" method="post" style="display: inline;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="previewModal_@blog.Id" tabindex="-1" aria-labelledby="previewModalLabel_@blog.Id" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="previewModalLabel_@blog.Id">@blog.Title</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="text-muted">By @blog.User.UserName on @blog.CreatedAt.ToString("MMM dd, yyyy")</p>
+                                    <div>
+                                        @Html.Raw(blog.Content)
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <form asp-action="ApproveBlog" asp-route-id="@blog.Id" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-success">Approve</button>
+                                    </form>
+                                    <form asp-action="RejectBlog" asp-route-id="@blog.Id" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-danger">Reject</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </tbody>
+        </table>
+    </div>
+}
