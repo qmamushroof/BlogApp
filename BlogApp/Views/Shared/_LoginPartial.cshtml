@@ -9,6 +9,13 @@
         <li class="nav-item">
             <span class="nav-link text-dark">Hello, @User.Identity?.Name!</span>
         </li>
+        ///
+        <li class="nav-item">
+            <a class="nav-link btn btn-link text-dark" asp-controller="Account" asp-action="ChangePassword">
+                Change password
+            </a>
+        </li>
+        ///
         <li class="nav-item">
             <form class="form-inline" asp-controller="Account" asp-action="Logout" asp-route-returnUrl="@Url.Action("Index", "Home")">
                 <button type="submit" class="nav-link btn btn-link text-dark">Logout</button>

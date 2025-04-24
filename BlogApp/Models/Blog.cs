@@ -38,7 +38,7 @@ namespace BlogApp.Models
         public virtual ICollection<Comment> Comments { get; set; }
         public virtual ICollection<Reaction> Reactions { get; set; }
 
-        public int LikesCount => Reactions?.Count(reaction => reaction.IsLike) ?? 0;
-        public int DislikesCount => Reactions?.Count(reaction => !reaction.IsLike) ?? 0;
+        public int LikesCount => Reactions?.Count(reaction => reaction.Type == ReactionType.Like) ?? 0;
+        public int DislikesCount => Reactions?.Count(reaction => reaction.Type == ReactionType.Dislike) ?? 0;
     }
 }

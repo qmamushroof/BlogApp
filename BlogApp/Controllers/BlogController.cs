@@ -4,6 +4,7 @@ using BlogApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace BlogApp.Controllers
 {
@@ -49,7 +50,7 @@ namespace BlogApp.Controllers
                 if (reaction != null)
                 {
                     viewModel.UserHasReacted = true;
-                    viewModel.UserReactionIsLike = reaction.IsLike;
+                    viewModel.UserReactionIsLike = reaction.Type == ReactionType.Like;
                 }
             }
 
@@ -70,7 +71,12 @@ namespace BlogApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BlogViewModel model)
         {
+            if (model.Content == null || model.Title == null)
+            {
+                return View(model);
+            }
             var currentUser = await _userManager.GetUserAsync(User);
+
             var blog = new Blog
             {
                 Title = model.Title,
@@ -81,6 +87,7 @@ namespace BlogApp.Controllers
             };
 
             await _blogService.CreateBlogAsync(blog);
+
             TempData["Message"] = "Your blog post has been submitted for approval.";
             return RedirectToAction("Index", "Home");
         }
@@ -115,6 +122,11 @@ namespace BlogApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(BlogViewModel model)
         {
+            if (model.Content == null || model.Title == null)
+            {
+                return View(model);
+            }
+
             var blog = await _blogService.GetBlogByIdAsync(model.Id);
             if (blog == null)
             {
@@ -130,16 +142,37 @@ namespace BlogApp.Controllers
             blog.Title = model.Title;
             blog.Content = model.Content;
             blog.UpdatedAt = DateTime.UtcNow;
-            blog.Status = ApprovalStatus.Pending;
 
             await _blogService.UpdateBlogAsync(blog);
-            TempData["Message"] = "Your blog post has been updated and resubmitted for approval.";
+            TempData["Message"] = "Your blog post has been updated.";
             return RedirectToAction("Details", new { id = blog.Id });
         }
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> React(int blogId, bool isLike)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var blog = await _blogService.GetBlogByIdAsync(id);
+            if (blog == null)
+            {
+                return NotFound();
+            }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (blog.UserId != currentUser.Id)
+            {
+                return Forbid();
+            }
+
+            await _blogService.DeleteBlogAsync(blog.Id);
+            TempData["Message"] = "Your blog post has been deleted.";
+            return RedirectToAction("Index", "Home");
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> React(int blogId, ReactionType type)
         {
             var blog = await _blogService.GetBlogByIdAsync(blogId);
             if (blog == null || blog.Status != ApprovalStatus.Approved)
@@ -149,6 +182,7 @@ namespace BlogApp.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var existingReaction = await _blogService.GetUserReactionAsync(blogId, currentUser.Id);
+            var existingReaction2 = blog.Reactions.Where(x => x.UserId == currentUser.Id);
 
             if (existingReaction == null)
             {
@@ -156,19 +190,43 @@ namespace BlogApp.Controllers
                 {
                     BlogId = blogId,
                     UserId = currentUser.Id,
-                    IsLike = isLike,
+                    Type = type,
                     CreatedAt = DateTime.UtcNow
                 };
                 await _blogService.AddReactionAsync(reaction);
             }
+            else if (existingReaction.Type == type)
+            {
+                await _blogService.RemoveReactionAsync(existingReaction);
+            }
             else
             {
-                existingReaction.IsLike = isLike;
+                existingReaction.Type = type;
                 await _blogService.UpdateReactionAsync(existingReaction);
             }
 
-            blog = await _blogService.GetBlogByIdAsync(blogId);
             return Json(new { likes = blog.LikesCount, dislikes = blog.DislikesCount });
         }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> AllBlogs()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var allBlogs = await _blogService.GetBlogsByUserAsync(currentUser);
+
+            return View(allBlogs);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> BlogsByStatus(ApprovalStatus status)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var blogs = await _blogService.GetBlogsByUserAsync(currentUser, status);
+            ViewBag.SelectedStatus = status;
+
+            return View(nameof(AllBlogs), blogs);
+        }
+
     }
 }

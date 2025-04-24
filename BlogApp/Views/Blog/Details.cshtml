@@ -5,6 +5,9 @@
     var isAuthenticated = ViewBag.IsAuthenticated;
 }
 
+<link href="~/css/froala_editor.pkgd.min.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="~/js/froala_editor.pkgd.min.js"></script>
+
 <div class="row">
     <div class="col-md-8">
         <h1>@Model.Title</h1>
@@ -23,7 +26,10 @@
         @if (Model.UserCanEdit)
         {
             <div class="mb-4">
-                @* <a asp-controller="Blog" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Edit</a> *@
+                <a asp-controller="Blog" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Edit</a>
+                <form class="form-check-inline" asp-controller="Blog" asp-action="Delete" asp-route-id="@Model.Id" method="post">
+                    <button type="submit" class="btn btn-outline-danger">Delete</button>
+                </form>
             </div>
         }
 
@@ -66,10 +72,14 @@
                         <form id="commentForm" asp-controller="Comment" asp-action="Create" method="post">
                             <input type="hidden" name="BlogId" value="@Model.Id" />
                             <div class="mb-3">
-                                <textarea name="Content" class="form-control" rows="3" placeholder="Write your comment..." required></textarea>
+                                <textarea name="Content" id="editor" class="form-control" rows="3" placeholder="Write your comment..." required></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary">Post Comment</button>
                         </form>
+
+                        <script>
+                            var editor = new FroalaEditor('#editor');
+                        </script>
                     </div>
                 }
                 else
@@ -78,7 +88,7 @@
                         Please <a asp-controller="Account" asp-action="Login">login</a> to comment on this blog post.
                     </div>
                 }
-                 
+
                 <div id="commentsList">
                     @await Html.PartialAsync("_CommentsPartial", comments)
                 </div>
@@ -93,11 +103,14 @@
             $('.reaction-btn').click(function() {
                 var blogId = $(this).data('blog-id');
                 var isLike = $(this).data('is-like');
+                ///
+                var reactionType = isLike? 0 : 1;
 
                 $.ajax({
                     url: '@Url.Action("React", "Blog")',
                     type: 'POST',
-                    data: { blogId: blogId, isLike: isLike },
+                    // data: { blogId: blogId, isLike: isLike },
+                    data: { blogId: blogId, type: reactionType},
                     success: function(result) {
                         $('#likes-count').text(result.likes);
                         $('#dislikes-count').text(result.dislikes);

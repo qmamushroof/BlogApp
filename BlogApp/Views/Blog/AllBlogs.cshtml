@@ -1,0 +1,82 @@
+﻿@model List<BlogApp.Models.Blog>
+@{
+    ViewData["Title"] = "My Blogs";
+}
+
+<h1>My Submissions</h1>
+
+<div class="mb-3">
+    <form asp-action="BlogsByStatus" method="get" class="form-inline">
+        @{
+            var statuses = Html.GetEnumSelectList<ApprovalStatus>();
+            <select name="status" class="form-select d-inline w-auto me-2">
+                <option value=""></option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        }
+    </form>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info mt-4">
+        <p>Nothing to show.</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive mt-4">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Approval Status</th>
+                    <th>Created On</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var blog in Model)
+                {
+                    <tr>
+                        <td>@blog.Title</td>
+                        <td>@blog.Status</td>
+                        <td>@blog.CreatedAt.ToString("MMM dd, yyyy")</td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#previewModal_@blog.Id">
+                                Preview
+                            </a>
+                            <a asp-controller="Blog" asp-action="Edit" asp-route-id="@blog.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <form class="form-check-inline" asp-controller="Blog" asp-action="Delete" asp-route-id="@blog.Id" method="post">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="previewModal_@blog.Id" tabindex="-1" aria-labelledby="previewModalLabel_@blog.Id" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="previewModalLabel_@blog.Id">@blog.Title</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="text-muted">Blog Status: @blog.Status</p>
+                                    <div>
+                                        @Html.Raw(blog.Content)
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </tbody>
+        </table>
+    </div>
+}

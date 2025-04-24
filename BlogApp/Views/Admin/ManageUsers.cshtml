@@ -1,0 +1,24 @@
+﻿@model List<ApplicationUser>
+
+<table class="table">
+    <tr>
+        <th>Email</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+    @foreach (var user in Model)
+    {
+        <tr>
+            <td>@user.Email</td>
+            <td>@(user.IsBlocked ? "Blocked" : "Active")</td>
+            <td>
+                <form asp-action="AuthorizeUsers" method="post">
+                    <input type="hidden" name="userId" value="@user.Id" />
+                    <button type="submit" class="btn btn-sm @(user.IsBlocked ? "btn-success" : "btn-danger")">
+                        @(user.IsBlocked ? "Unblock" : "Block")
+                    </button>
+                </form>
+            </td>
+        </tr>
+    }
+</table>

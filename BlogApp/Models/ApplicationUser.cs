@@ -12,6 +12,7 @@ namespace BlogApp.Models
         }
 
         public bool IsAdmin { get; set; } = false;
+        public bool IsBlocked { get; set; } = false;
         public virtual ICollection<Blog> Blogs { get; set; }
         public virtual ICollection<Comment> Comments { get; set; }
         public virtual ICollection<Reaction> Reactions { get; set; }
