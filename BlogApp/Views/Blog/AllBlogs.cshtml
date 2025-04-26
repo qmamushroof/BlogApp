@@ -7,16 +7,13 @@
 
 <div class="mb-3">
     <form asp-action="BlogsByStatus" method="get" class="form-inline">
-        @{
-            var statuses = Html.GetEnumSelectList<ApprovalStatus>();
-            <select name="status" class="form-select d-inline w-auto me-2">
-                <option value=""></option>
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-            </select>
-            <button type="submit" class="btn btn-primary">Filter</button>
-        }
+        @Html.DropDownList(
+                 "status",
+                 Html.GetEnumSelectList<ApprovalStatus>(),
+                 "",
+                 new { @class = "form-select d-inline w-auto me-2" }
+                 )
+        <button type="submit" class="btn btn-primary">Filter</button>
     </form>
 </div>
 

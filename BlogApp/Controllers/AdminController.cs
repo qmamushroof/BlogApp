@@ -78,12 +78,26 @@ namespace BlogApp.Controllers
             return View("Views/Admin/TopBlogs.cshtml", topBlogs);
         }
 
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> TopBlogs()
         {
-            int quantity = 5;
-            var topBlogs = await _blogService.GetTopBlogsAsync(quantity);
-            return View(topBlogs);
+            try
+            {
+                int quantity = 5;
+
+                int blogsCount = await _blogService.GetTotalApprovedBlogsCountAsync();
+                if (blogsCount >= 5)
+                {
+                    var topBlogs = await _blogService.GetTopBlogsAsync(quantity);
+                    return View(topBlogs);
+                }
+                else
+                {
+                    var topBlogs = await _blogService.GetTopBlogsAsync(blogsCount);
+                    return View(topBlogs);
+                }
+            }
+            catch (Exception ex) { }
+            return RedirectToAction("Index", "Home");
         }
     }
 }

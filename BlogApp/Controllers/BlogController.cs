@@ -223,7 +223,9 @@ namespace BlogApp.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var blogs = await _blogService.GetBlogsByUserAsync(currentUser, status);
+            
             ViewBag.SelectedStatus = status;
+            ViewData["status"] = status;
 
             return View(nameof(AllBlogs), blogs);
         }
