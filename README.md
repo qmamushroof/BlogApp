@@ -1,5 +1,5 @@
 # BlogApp
-## Features:
+## Features
 1. Registration and Login
 1. Registered Users can post, edit and delete blog posts and comments.
 1. All users (registered & non-registered) can view the blogs posted on the landing page.
