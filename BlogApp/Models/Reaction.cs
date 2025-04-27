@@ -8,7 +8,6 @@
     public class Reaction
     {
         public int Id { get; set; }
-        //public bool IsLike { get; set; }
         public ReactionType Type { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

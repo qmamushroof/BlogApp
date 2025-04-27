@@ -18,7 +18,6 @@ namespace BlogApp.Controllers
         {
             _blogService = blogService;
             _userManager = userManager;
-
         }
 
         public async Task<IActionResult> BlogApproval()
@@ -31,7 +30,10 @@ namespace BlogApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveBlog(int id)
         {
-            await _blogService.ApproveBlogAsync(id);
+            if (!(await _blogService.ApproveBlogAsync(id)))
+            {
+                TempData["Message"] = "Blog not found or already dealt with.";
+            }
             return RedirectToAction(nameof(BlogApproval));
         }
 
@@ -39,7 +41,10 @@ namespace BlogApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RejectBlog(int id)
         {
-            await _blogService.RejectBlogAsync(id);
+            if (!(await _blogService.RejectBlogAsync(id)))
+            {
+                TempData["Message"] = "Blog not found or already dealt with.";
+            }
             return RedirectToAction(nameof(BlogApproval));
         }
 

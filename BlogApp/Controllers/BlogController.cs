@@ -143,7 +143,12 @@ namespace BlogApp.Controllers
             blog.Content = model.Content;
             blog.UpdatedAt = DateTime.UtcNow;
 
-            await _blogService.UpdateBlogAsync(blog);
+            if (!(await _blogService.UpdateBlogAsync(blog)))
+            {
+                TempData["Message"] = "Blog not found deleted.";
+                return RedirectToAction("Index", "Home");
+            }
+
             TempData["Message"] = "Your blog post has been updated.";
             return RedirectToAction("Details", new { id = blog.Id });
         }
@@ -165,7 +170,12 @@ namespace BlogApp.Controllers
                 return Forbid();
             }
 
-            await _blogService.DeleteBlogAsync(blog.Id);
+            if (!(await _blogService.DeleteBlogAsync(blog.Id)))
+            {
+                TempData["Message"] = "Blog not found or already deleted.";
+                return RedirectToAction("Index", "Home");
+            }
+
             TempData["Message"] = "Your blog post has been deleted.";
             return RedirectToAction("Index", "Home");
         }
