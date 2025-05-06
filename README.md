@@ -3,7 +3,7 @@
 1. Registration and Login
 1. Registered Users can post, edit and delete blog posts and comments.
 1. All users (registered & non-registered) can view the blogs posted on the landing page.
-1. At first only 5 blogs will be rendered. If any user presses the "load more" button, then the next 5 will be loaded after the 1st five.
+1. At first only 5 blogs will be rendered. If any user presses the "load more" button, then the next 5 will be loaded after the 1st five. All rendered blogs will be stored in cache.
 1. Only registered users can like, dislike and comment on the posts.
 1. All users  (registered & non-registered) can see the number of likes, dislikes and content of the comments.
 1. There will be an admin user, who will approve the blogs posts by registered users.
@@ -12,6 +12,7 @@
 1. Registered users can change their password.
 1. Admin can view top 5 posts/blogs. (Considering number of likes and comments)
 1. Admin can block & unblock  any registered user. Blocked users cannot log in to the system.
+1. Any runtime exceptions in controller logic will be logged using Serilog in a txt file.
 
 ## Images
 ![Screenshot (1)](https://github.com/user-attachments/assets/559187b6-507c-4f48-a354-0714dd79eec7)
