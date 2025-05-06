@@ -4,6 +4,7 @@ using BlogApp.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IBlogService, BlogService>();
 
-Log.Logger = new LoggerConfiguration().WriteTo.File("Logs/errors.txt", rollingInterval: RollingInterval.Day).CreateLogger();
+Log.Logger = new LoggerConfiguration().MinimumLevel.Error().WriteTo.File("Logs/errors.txt", restrictedToMinimumLevel: LogEventLevel.Error, rollingInterval: RollingInterval.Day).WriteTo.Console().CreateLogger();
 builder.Host.UseSerilog();
 
 

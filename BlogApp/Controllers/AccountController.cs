@@ -10,13 +10,13 @@ namespace BlogApp.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -31,24 +31,32 @@ namespace BlogApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                var user = new ApplicationUser
+                if (ModelState.IsValid)
                 {
-                    UserName = model.UserName,
-                    Email = model.Email
-                };
+                    var user = new ApplicationUser
+                    {
+                        UserName = model.UserName,
+                        Email = model.Email
+                    };
 
-                var result = await _userManager.CreateAsync(user, model.Password);
-                if (result.Succeeded)
-                {
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "Home");
+                    var result = await _userManager.CreateAsync(user, model.Password);
+                    if (result.Succeeded)
+                    {
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        return RedirectToAction("Index", "Home");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Invalid registration attempt.");
+                    }
                 }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid registration attempt.");
-                }
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError(string.Empty, "An error occurred while registering.");
+                _logger.Log(LogLevel.Error, "Register of AccountController couldn't register.");
             }
 
             return View(model);
@@ -71,11 +79,12 @@ namespace BlogApp.Controllers
                 try
                 {
                     var user = await _userManager.FindByEmailAsync(model.Email);
-                    if (user!=null && user.IsBlocked)
+                    if (user != null && user.IsBlocked)
                     {
                         ModelState.AddModelError(string.Empty, "Your account is blocked.");
                         return View(model);
                     }
+
                     var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure: false);
                     if (result.Succeeded)
                     {
@@ -84,12 +93,14 @@ namespace BlogApp.Controllers
                     else
                     {
                         ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                        _logger.Log(LogLevel.Error, "Login of AccountController couldn't login.");
                     }
                 }
                 catch (Exception ex)
                 {
                     ModelState.AddModelError(String.Empty, "User doesn't exist");
-                }                
+                    _logger.Log(LogLevel.Error, "Login of AccountController couldn't login.");
+                }
             }
 
             return View(model);
@@ -100,7 +111,16 @@ namespace BlogApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            await _signInManager.SignOutAsync();
+            try
+            {
+                await _signInManager.SignOutAsync();
+
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError(string.Empty, "An error occurred while logging out.");
+                _logger.Log(LogLevel.Error, "Logout of AccountController couldn't logout.");
+            }
             return RedirectToAction("Index", "Home");
         }
 
@@ -116,20 +136,28 @@ namespace BlogApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(PasswordViewModel model)
         {
-            if (_signInManager.IsSignedIn(User))
+            try
             {
-                var user = await _userManager.GetUserAsync(User);
-                var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+                if (_signInManager.IsSignedIn(User))
+                {
+                    var user = await _userManager.GetUserAsync(User);
+                    var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
 
-                if (result.Succeeded)
-                {
-                    TempData["Message"] = "Your password has been updated.";
-                    return RedirectToAction("Index", "Home");
+                    if (result.Succeeded)
+                    {
+                        TempData["Message"] = "Your password has been updated.";
+                        return RedirectToAction("Index", "Home");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Invalid password changing attempt.");
+                    }
                 }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid password changing attempt.");
-                }
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError(string.Empty, "An error occurred while changing the password.");
+                _logger.Log(LogLevel.Error, "ChangePassword of AccountController couldn't change password.");
             }
 
             return View(model);
